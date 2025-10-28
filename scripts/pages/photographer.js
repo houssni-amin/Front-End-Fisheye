@@ -60,6 +60,12 @@ async function init() {
   portrait.className = "photographerPortrait"
   header.appendChild(portrait)
 
+  const headerModalLeft = document.querySelector(".header-modal-left")
+  const photographerNameElement = document.createElement("p")
+  photographerNameElement.textContent = photographer.name
+  photographerNameElement.classList.add("photographer-name-modal")
+  headerModalLeft.appendChild(photographerNameElement)
+
   // --- Création du menu de tri ---
   const filter = document.createElement("div")
   filter.className = "filter"

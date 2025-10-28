@@ -1,5 +1,71 @@
 #contact-modal {
   display: none;
+  height: 100%;
+  width: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal {
+  border-radius: 5px;
+  background-color: #db8876;
+  width: 40%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 35px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.modal header {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  width: 100%;
+  height: auto;
+  margin-bottom: 25px;
+}
+
+.header-modal-left {
+  display: flex;
+  flex-direction: column;
+}
+
+.header-modal-left h2,
+.header-modal-left p {
+  font-size: 64px;
+  color: black;
+  margin: 0;
+  font-weight: 400;
+}
+
+.modal form input,
+.modal form textarea {
+  font-size: 16px;
+  height: 50px;
+  max-width: 100%;
+  padding: 10px;
+  border: none;
+  box-sizing: border-box;
+  outline: none;
+}
+.modal form textarea {
+  max-height: 120px;
+  border-radius: 5px;
+}
+.photographer-name-modal {
+  font-size: 36px;
+  color: #312e2e;
+  margin-top: 10px;
+  margin-bottom: 0;
+  width: 100%;
+  text-align: left;
 }
 
 header img {
@@ -23,33 +89,6 @@ header img {
   background-color: #901c1c;
   border-radius: 5px;
   cursor: pointer;
-}
-
-.modal {
-  border-radius: 5px;
-  background-color: #db8876;
-  width: 50%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: space-between;
-  padding: 35px;
-  margin: auto;
-}
-
-.modal header {
-  justify-content: space-between;
-  max-width: 1400px;
-}
-
-.modal header img {
-  cursor: pointer;
-}
-
-.modal header h2 {
-  font-size: 64px;
-  font-weight: normal;
-  text-align: center;
 }
 
 form {
