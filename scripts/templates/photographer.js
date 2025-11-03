@@ -12,6 +12,7 @@ function photographerTemplate(data) {
 
     const img = document.createElement("img")
     img.setAttribute("src", picture)
+    img.setAttribute("alt", name)
     photographer.appendChild(img)
 
     const h2 = document.createElement("h2")
