@@ -1,3 +1,10 @@
+let currentMediaList = []
+let currentMediaIndex = 0
+let folderName = ""
+
+// --- 1. RÉCUPÉRATION DES DONNÉES ---
+
+// Fonctions pour aller chercher les données dans le JSON
 async function getData() {
   const res = await fetch("../../data/photographers.json")
   const data = await res.json()
@@ -20,19 +27,20 @@ function getFolderName(name) {
   return name.split(" ")[0]
 }
 
+// --- 2. FONCTION PRINCIPALE (CONSTRUCTION DE LA PAGE) ---
+
 async function init() {
-  // --- Récupération de l'ID depuis l'URL ---
   const params = new URLSearchParams(window.location.search)
   const id = params.get("id")
 
-  // --- Chargement des données ---
   const photographer = await getPhotographerById(id)
   let media = await getMediaByPhotographerId(id)
 
-  // --- Sélection du <main> principal ---
+  folderName = getFolderName(photographer.name)
+
   const main = document.querySelector("main")
 
-  // --- Construction du header ---
+  // --- 2a. Construction du Header ---
   const picture = `../../assets/Sample Photos/Photographers ID Photos/${photographer.portrait}`
   const header = document.querySelector(".photograph-header")
 
@@ -66,7 +74,7 @@ async function init() {
   photographerNameElement.classList.add("photographer-name-modal")
   headerModalLeft.appendChild(photographerNameElement)
 
-  // --- Création du menu de tri ---
+  // --- 2b. Construction du Menu de Tri ---
   const filter = document.createElement("div")
   filter.className = "filter"
 
@@ -85,7 +93,7 @@ async function init() {
   filter.appendChild(select)
   main.appendChild(filter)
 
-  // --- Création du bloc total likes + prix ---
+  // --- 2c. Construction de l'Encart Likes/Prix ---
   const boxInfos = document.createElement("div")
   boxInfos.className = "boxInfos"
 
@@ -95,6 +103,7 @@ async function init() {
 
   const totalLikes = document.createElement("p")
   totalLikes.className = "totalLikes"
+  // .reduce() "réduit" un tableau à une seule valeur. Ici, on additionne tous les likes.
   let totalLikesCount = media.reduce((acc, m) => acc + (m.likes || 0), 0)
   totalLikes.textContent = totalLikesCount.toLocaleString("fr-FR")
   totalLikesBox.appendChild(totalLikes)
@@ -112,20 +121,21 @@ async function init() {
 
   main.appendChild(boxInfos)
 
-  // --- Création de la galerie ---
+  // Prépare la zone qui contiendra la galerie
   const gallery = document.createElement("div")
   gallery.className = "media-gallery"
   main.appendChild(gallery)
 
-  const folderName = getFolderName(photographer.name)
-
-  // --- Fonction d'affichage des médias ---
+  // --- 2d. Fonction d'affichage de la Galerie  ---
   function renderGallery(mediaArray) {
     gallery.innerHTML = ""
+    currentMediaList = mediaArray
 
-    mediaArray.forEach((item) => {
+    mediaArray.forEach((item, index) => {
       const mediaCard = document.createElement("div")
       mediaCard.className = "media-card"
+
+      let mediaElement
 
       if (item.image) {
         const img = document.createElement("img")
@@ -133,12 +143,14 @@ async function init() {
         img.src = `../../assets/Sample Photos/${folderName}/${item.image}`
         img.alt = item.title
         mediaCard.appendChild(img)
+        mediaElement = img
       }
       if (item.video) {
         const video = document.createElement("video")
         video.className = "videoMediaCard"
         video.src = `../../assets/Sample Photos/${folderName}/${item.video}`
         mediaCard.appendChild(video)
+        mediaElement = video
       }
       const mediaInfos = document.createElement("div")
       mediaInfos.className = "mediaInfos"
@@ -162,6 +174,7 @@ async function init() {
       redHeart.className = "redHeartIcon"
       likesMediaCard.appendChild(redHeart)
 
+      // Logique pour le clic sur le coeur (like/unlike)
       let liked = false
       redHeart.addEventListener("click", () => {
         if (!liked) {
@@ -173,21 +186,26 @@ async function init() {
           totalLikesCount--
           liked = false
         }
+        // Met à jour les affichages
         mediaLikes.textContent = item.likes
         totalLikes.textContent = totalLikesCount.toLocaleString("fr-FR")
 
-        // --- Animation du cœur ---
         redHeart.classList.add("animateHeart")
         setTimeout(() => redHeart.classList.remove("animateHeart"), 200)
+      })
+
+      // Attache le clic pour ouvrir la lightbox
+      mediaElement.addEventListener("click", () => {
+        openLightbox(index)
       })
 
       gallery.appendChild(mediaCard)
     })
   }
 
-  // --- Fonction de tri ---
+  // --- 2e. Fonction de Tri ---
   function sortAndRender(criteria) {
-    const copy = media.slice()
+    const copy = media.slice() // Fait une copie pour ne pas modifier l'original
 
     if (criteria === "popularity") {
       copy.sort((a, b) => (b.likes || 0) - (a.likes || 0))
@@ -197,16 +215,119 @@ async function init() {
       copy.sort((a, b) => (a.title || "").localeCompare(b.title || ""))
     }
 
-    renderGallery(copy)
+    renderGallery(copy) // Ré-affiche la galerie avec la liste triée
   }
 
-  // --- Quand on change le tri ---
+  // Écouteur d'événement sur le menu de tri
   select.addEventListener("change", (e) => {
     sortAndRender(e.target.value)
   })
 
-  // --- Premier affichage (par popularité) ---
   sortAndRender("date")
 }
 
 init()
+
+// --- 3. FONCTIONS DE LA LIGHTBOX ---
+
+//Crée et ouvre la lightbox au bon index
+function openLightbox(index) {
+  // Ne fait rien si la lightbox est déjà ouverte
+  if (document.getElementById("lightbox-modal")) return
+
+  currentMediaIndex = index // Met à jour le "marque-page"
+
+  const lightbox = document.createElement("div")
+  lightbox.id = "lightbox-modal"
+  lightbox.className = "lightbox"
+
+  const closeBtn = document.createElement("button")
+  closeBtn.className = "lightbox-close"
+  closeBtn.innerHTML = "<p>x</p>"
+  closeBtn.addEventListener("click", closeLightbox)
+  lightbox.appendChild(closeBtn)
+
+  const nextBtn = document.createElement("button")
+  nextBtn.className = "lightbox-next"
+  nextBtn.innerHTML = "<p>></p>"
+  nextBtn.addEventListener("click", nextMedia)
+  lightbox.appendChild(nextBtn)
+
+  const prevBtn = document.createElement("button")
+  prevBtn.className = "lightbox-prev"
+  prevBtn.innerHTML = "<p><</p>"
+  prevBtn.addEventListener("click", prevMedia)
+  lightbox.appendChild(prevBtn)
+
+  const container = document.createElement("div")
+  container.className = "lightbox-container"
+
+  const title = document.createElement("p")
+  title.className = "lightbox-title"
+  container.appendChild(title)
+
+  lightbox.appendChild(container)
+
+  document.body.appendChild(lightbox)
+
+  displayCurrentMedia()
+}
+
+function closeLightbox() {
+  const lightbox = document.getElementById("lightbox-modal")
+  if (lightbox) {
+    document.body.removeChild(lightbox)
+  }
+}
+
+function displayCurrentMedia() {
+  const container = document.querySelector(
+    "#lightbox-modal .lightbox-container"
+  )
+  const title = document.querySelector("#lightbox-modal .lightbox-title")
+  if (!container || !title) return // Sécurité
+
+  // Récupère le bon objet média en utilisant la "playlist" et le "marque-page"
+  const media = currentMediaList[currentMediaIndex]
+
+  // Retire l'ancien média (s'il y en a un)
+  const oldMedia =
+    container.querySelector("img") || container.querySelector("video")
+  if (oldMedia) {
+    container.removeChild(oldMedia)
+  }
+
+  // Ajoute le nouveau média
+  if (media.image) {
+    const img = document.createElement("img")
+    img.src = `../../assets/Sample Photos/${folderName}/${media.image}`
+    img.alt = media.title
+    img.className = "lightbox-media"
+    container.prepend(img)
+  } else if (media.video) {
+    const video = document.createElement("video")
+    video.src = `../../assets/Sample Photos/${folderName}/${media.video}`
+    video.controls = true
+    video.className = "lightbox-media"
+    container.prepend(video)
+  }
+
+  // Met à jour le titre
+  title.textContent = media.title
+}
+
+function nextMedia() {
+  currentMediaIndex++
+  if (currentMediaIndex >= currentMediaList.length) {
+    currentMediaIndex = 0
+  }
+  displayCurrentMedia()
+}
+
+function prevMedia() {
+  currentMediaIndex--
+  if (currentMediaIndex < 0) {
+    currentMediaIndex = currentMediaList.length - 1
+  }
+  displayCurrentMedia()
+}

@@ -242,3 +242,86 @@ form input {
 .redHeartIcon.animateHeart {
   transform: scale(1.4);
 }
+
+.lightbox {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 1);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.lightbox-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 1200px;
+  max-height: 90vh;
+}
+
+.lightbox-media {
+  max-width: 100%;
+  max-height: 80vh;
+  object-fit: contain;
+  border-radius: 5px;
+}
+
+.lightbox-title {
+  color: #901c1c;
+  font-size: 24px;
+  font-weight: 400;
+  margin-top: 15px;
+  width: 100%;
+  text-align: center;
+}
+
+.lightbox-close,
+.lightbox-next,
+.lightbox-prev {
+  background: none;
+  border: none;
+  cursor: pointer;
+  position: absolute;
+  color: #901c1c;
+  font-size: 50px;
+}
+
+.lightbox-close {
+  top: 20px;
+  right: 20px;
+}
+.lightbox-close img {
+  width: 42px;
+  height: 42px;
+}
+
+.lightbox-next {
+  top: 50%;
+  right: 20px;
+  transform: translateY(-50%);
+}
+.lightbox-next img {
+  width: 48px;
+  height: 48px;
+}
+
+.lightbox-prev {
+  top: 50%;
+  left: 20px;
+  transform: translateY(-50%);
+}
+.lightbox-prev img {
+  width: 48px;
+  height: 48px;
+  transform: rotate(180deg);
+}
