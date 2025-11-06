@@ -6,7 +6,7 @@ let folderName = ""
 
 // Fonctions pour aller chercher les données dans le JSON
 async function getData() {
-  const res = await fetch("../../data/photographers.json")
+  const res = await fetch("data/photographers.json")
   const data = await res.json()
   return data
 }
