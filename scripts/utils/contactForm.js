@@ -29,5 +29,7 @@ if (contactForm) {
     closeModal()
 
     alert(`Merci ${prenom} ! Votre message a été envoyé.`)
+
+    contactForm.reset()
   })
 }
