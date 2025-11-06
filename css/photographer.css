@@ -39,7 +39,7 @@
 
 .header-modal-left h2,
 .header-modal-left p {
-  font-size: 64px;
+  font-size: 55px;
   color: black;
   margin: 0;
   font-weight: 400;
@@ -56,7 +56,7 @@
   outline: none;
 }
 .modal form textarea {
-  height: 125px;
+  height: 100px;
   border-radius: 5px;
   resize: none;
 }
@@ -109,7 +109,7 @@ form div {
   flex-direction: column;
   width: 100%;
   align-items: self-start;
-  margin-bottom: 26px;
+  margin-bottom: 20px;
 }
 
 form input {
