@@ -41,7 +41,7 @@ async function init() {
   const main = document.querySelector("main")
 
   // --- 2a. Construction du Header ---
-  const picture = `../../assets/Sample Photos/Photographers ID Photos/${photographer.portrait}`
+  const picture = `assets/Sample Photos/Photographers ID Photos/${photographer.portrait}`
   const header = document.querySelector(".photograph-header")
 
   const headerLeft = document.createElement("div")
@@ -140,7 +140,7 @@ async function init() {
       if (item.image) {
         const img = document.createElement("img")
         img.className = "imgMediaCard"
-        img.src = `../../assets/Sample Photos/${folderName}/${item.image}`
+        img.src = `assets/Sample Photos/${folderName}/${item.image}`
         img.alt = item.title
         mediaCard.appendChild(img)
         mediaElement = img
@@ -148,7 +148,7 @@ async function init() {
       if (item.video) {
         const video = document.createElement("video")
         video.className = "videoMediaCard"
-        video.src = `../../assets/Sample Photos/${folderName}/${item.video}`
+        video.src = `assets/Sample Photos/${folderName}/${item.video}`
         mediaCard.appendChild(video)
         mediaElement = video
       }

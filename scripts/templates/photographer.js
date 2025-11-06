@@ -1,7 +1,7 @@
 function photographerTemplate(data) {
   const { portrait, name, city, country, tagline, price, id } = data
 
-  const picture = `../assets/Sample Photos/Photographers ID Photos/${portrait}`
+  const picture = `assets/Sample Photos/Photographers ID Photos/${portrait}`
 
   function getUserCardDOM() {
     const article = document.createElement("article")
