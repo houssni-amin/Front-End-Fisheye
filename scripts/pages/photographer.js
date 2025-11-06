@@ -109,7 +109,7 @@ async function init() {
   totalLikesBox.appendChild(totalLikes)
 
   const blackHeart = document.createElement("img")
-  blackHeart.src = "../../assets/icons/blackHeart.svg"
+  blackHeart.src = "assets/icons/blackHeart.svg"
   blackHeart.alt = "Black heart icon"
   blackHeart.className = "blackHeartIcon"
   totalLikesBox.appendChild(blackHeart)
@@ -169,7 +169,7 @@ async function init() {
       likesMediaCard.appendChild(mediaLikes)
 
       const redHeart = document.createElement("img")
-      redHeart.src = "../../assets/icons/redHeart.svg"
+      redHeart.src = "assets/icons/redHeart.svg"
       redHeart.alt = "like"
       redHeart.className = "redHeartIcon"
       likesMediaCard.appendChild(redHeart)
@@ -300,13 +300,13 @@ function displayCurrentMedia() {
   // Ajoute le nouveau média
   if (media.image) {
     const img = document.createElement("img")
-    img.src = `../../assets/Sample Photos/${folderName}/${media.image}`
+    img.src = `assets/Sample Photos/${folderName}/${media.image}`
     img.alt = media.title
     img.className = "lightbox-media"
     container.prepend(img)
   } else if (media.video) {
     const video = document.createElement("video")
-    video.src = `../../assets/Sample Photos/${folderName}/${media.video}`
+    video.src = `assets/Sample Photos/${folderName}/${media.video}`
     video.controls = true
     video.className = "lightbox-media"
     container.prepend(video)
