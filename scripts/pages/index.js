@@ -1,5 +1,6 @@
 async function getPhotographers() {
   try {
+    // Chemin relatif simple pour GitHub Pages
     const res = await fetch("data/photographers.json")
     if (!res.ok) {
       throw new Error(res.status)

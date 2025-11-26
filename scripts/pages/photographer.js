@@ -4,7 +4,6 @@ let folderName = ""
 
 // --- 1. RÉCUPÉRATION DES DONNÉES ---
 
-// Fonctions pour aller chercher les données dans le JSON
 async function getData() {
   const res = await fetch("data/photographers.json")
   const data = await res.json()
@@ -27,7 +26,40 @@ function getFolderName(name) {
   return name.split(" ")[0]
 }
 
-// --- 2. FONCTION PRINCIPALE (CONSTRUCTION DE LA PAGE) ---
+// --- GESTIONNAIRE CLAVIER LIGHTBOX (FOCUS TRAP) ---
+function handleLightboxKeydown(e) {
+  if (e.key === "Escape") {
+    closeLightbox()
+  } else if (e.key === "ArrowRight") {
+    nextMedia()
+  } else if (e.key === "ArrowLeft") {
+    prevMedia()
+  } else if (e.key === "Tab") {
+    // Piège le focus à l'intérieur de la lightbox
+    const lightbox = document.getElementById("lightbox-modal")
+    const focusableElements = Array.from(
+      lightbox.querySelectorAll(
+        'button, [href], input, textarea, video[controls], [tabindex]:not([tabindex="-1"])'
+      )
+    )
+    const firstFocusableElement = focusableElements[0]
+    const lastFocusableElement = focusableElements[focusableElements.length - 1]
+
+    if (e.shiftKey) {
+      if (document.activeElement === firstFocusableElement) {
+        e.preventDefault()
+        lastFocusableElement.focus()
+      }
+    } else {
+      if (document.activeElement === lastFocusableElement) {
+        e.preventDefault()
+        firstFocusableElement.focus()
+      }
+    }
+  }
+}
+
+// --- 2. FONCTION PRINCIPALE ---
 
 async function init() {
   const params = new URLSearchParams(window.location.search)
@@ -40,7 +72,7 @@ async function init() {
 
   const main = document.querySelector("main")
 
-  // --- 2a. Construction du Header ---
+  // --- Header ---
   const picture = `assets/Sample Photos/Photographers ID Photos/${photographer.portrait}`
   const header = document.querySelector(".photograph-header")
 
@@ -74,7 +106,7 @@ async function init() {
   photographerNameElement.classList.add("photographer-name-modal")
   headerModalLeft.appendChild(photographerNameElement)
 
-  // --- 2b. Construction du Menu de Tri ---
+  // --- Menu de Tri ---
   const filter = document.createElement("div")
   filter.className = "filter"
 
@@ -84,6 +116,7 @@ async function init() {
 
   const select = document.createElement("select")
   select.id = "sort"
+  select.setAttribute("aria-label", "Trier les médias")
 
   const optionDate = new Option("Date", "date")
   const optionPopularity = new Option("Popularité", "popularity")
@@ -93,7 +126,7 @@ async function init() {
   filter.appendChild(select)
   main.appendChild(filter)
 
-  // --- 2c. Construction de l'Encart Likes/Prix ---
+  // --- Encart Likes/Prix ---
   const boxInfos = document.createElement("div")
   boxInfos.className = "boxInfos"
 
@@ -103,14 +136,14 @@ async function init() {
 
   const totalLikes = document.createElement("p")
   totalLikes.className = "totalLikes"
-  // .reduce() "réduit" un tableau à une seule valeur. Ici, on additionne tous les likes.
   let totalLikesCount = media.reduce((acc, m) => acc + (m.likes || 0), 0)
   totalLikes.textContent = totalLikesCount.toLocaleString("fr-FR")
   totalLikesBox.appendChild(totalLikes)
 
   const blackHeart = document.createElement("img")
   blackHeart.src = "assets/icons/blackHeart.svg"
-  blackHeart.alt = "Black heart icon"
+  blackHeart.alt = ""
+  blackHeart.setAttribute("aria-hidden", "true") // Icône décorative
   blackHeart.className = "blackHeartIcon"
   totalLikesBox.appendChild(blackHeart)
 
@@ -121,12 +154,11 @@ async function init() {
 
   main.appendChild(boxInfos)
 
-  // Prépare la zone qui contiendra la galerie
+  // --- Galerie ---
   const gallery = document.createElement("div")
   gallery.className = "media-gallery"
   main.appendChild(gallery)
 
-  // --- 2d. Fonction d'affichage de la Galerie  ---
   function renderGallery(mediaArray) {
     gallery.innerHTML = ""
     currentMediaList = mediaArray
@@ -149,6 +181,7 @@ async function init() {
         const video = document.createElement("video")
         video.className = "videoMediaCard"
         video.src = `assets/Sample Photos/${folderName}/${item.video}`
+        video.setAttribute("aria-label", item.title)
         mediaCard.appendChild(video)
         mediaElement = video
       }
@@ -170,13 +203,15 @@ async function init() {
 
       const redHeart = document.createElement("img")
       redHeart.src = "assets/icons/redHeart.svg"
-      redHeart.alt = "like"
+      redHeart.alt = "likes"
+      redHeart.setAttribute("role", "button") // Le coeur agit comme un bouton
+      redHeart.setAttribute("tabindex", "0") // Rendu accessible au clavier
       redHeart.className = "redHeartIcon"
       likesMediaCard.appendChild(redHeart)
 
-      // Logique pour le clic sur le coeur (like/unlike)
+      // Logique Like (Souris + Clavier)
       let liked = false
-      redHeart.addEventListener("click", () => {
+      function handleLike() {
         if (!liked) {
           item.likes++
           totalLikesCount++
@@ -186,27 +221,37 @@ async function init() {
           totalLikesCount--
           liked = false
         }
-        // Met à jour les affichages
         mediaLikes.textContent = item.likes
         totalLikes.textContent = totalLikesCount.toLocaleString("fr-FR")
-
         redHeart.classList.add("animateHeart")
         setTimeout(() => redHeart.classList.remove("animateHeart"), 200)
+      }
+
+      redHeart.addEventListener("click", handleLike)
+      redHeart.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") handleLike()
       })
 
-      // Attache le clic pour ouvrir la lightbox
+      // Ouverture Lightbox (Souris + Clavier)
+      mediaElement.setAttribute("tabindex", 0)
+      mediaElement.style.cursor = "pointer"
+
       mediaElement.addEventListener("click", () => {
         openLightbox(index)
+      })
+      mediaElement.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault() // Empêche le comportement par défaut
+          openLightbox(index)
+        }
       })
 
       gallery.appendChild(mediaCard)
     })
   }
 
-  // --- 2e. Fonction de Tri ---
   function sortAndRender(criteria) {
-    const copy = media.slice() // Fait une copie pour ne pas modifier l'original
-
+    const copy = media.slice()
     if (criteria === "popularity") {
       copy.sort((a, b) => (b.likes || 0) - (a.likes || 0))
     } else if (criteria === "date") {
@@ -214,11 +259,9 @@ async function init() {
     } else if (criteria === "title") {
       copy.sort((a, b) => (a.title || "").localeCompare(b.title || ""))
     }
-
-    renderGallery(copy) // Ré-affiche la galerie avec la liste triée
+    renderGallery(copy)
   }
 
-  // Écouteur d'événement sur le menu de tri
   select.addEventListener("change", (e) => {
     sortAndRender(e.target.value)
   })
@@ -230,32 +273,36 @@ init()
 
 // --- 3. FONCTIONS DE LA LIGHTBOX ---
 
-//Crée et ouvre la lightbox au bon index
 function openLightbox(index) {
-  // Ne fait rien si la lightbox est déjà ouverte
   if (document.getElementById("lightbox-modal")) return
 
-  currentMediaIndex = index // Met à jour le "marque-page"
+  currentMediaIndex = index
 
   const lightbox = document.createElement("div")
   lightbox.id = "lightbox-modal"
   lightbox.className = "lightbox"
+  lightbox.setAttribute("role", "dialog")
+  lightbox.setAttribute("aria-label", "Vue rapprochée du média")
+  lightbox.setAttribute("aria-modal", "true")
 
   const closeBtn = document.createElement("button")
   closeBtn.className = "lightbox-close"
   closeBtn.innerHTML = "<p>x</p>"
+  closeBtn.setAttribute("aria-label", "Fermer la vue média")
   closeBtn.addEventListener("click", closeLightbox)
   lightbox.appendChild(closeBtn)
 
   const nextBtn = document.createElement("button")
   nextBtn.className = "lightbox-next"
   nextBtn.innerHTML = "<p>></p>"
+  nextBtn.setAttribute("aria-label", "Média suivant")
   nextBtn.addEventListener("click", nextMedia)
   lightbox.appendChild(nextBtn)
 
   const prevBtn = document.createElement("button")
   prevBtn.className = "lightbox-prev"
   prevBtn.innerHTML = "<p><</p>"
+  prevBtn.setAttribute("aria-label", "Média précédent")
   prevBtn.addEventListener("click", prevMedia)
   lightbox.appendChild(prevBtn)
 
@@ -271,6 +318,9 @@ function openLightbox(index) {
   document.body.appendChild(lightbox)
 
   displayCurrentMedia()
+
+  document.addEventListener("keydown", handleLightboxKeydown)
+  closeBtn.focus()
 }
 
 function closeLightbox() {
@@ -278,6 +328,7 @@ function closeLightbox() {
   if (lightbox) {
     document.body.removeChild(lightbox)
   }
+  document.removeEventListener("keydown", handleLightboxKeydown)
 }
 
 function displayCurrentMedia() {
@@ -285,19 +336,16 @@ function displayCurrentMedia() {
     "#lightbox-modal .lightbox-container"
   )
   const title = document.querySelector("#lightbox-modal .lightbox-title")
-  if (!container || !title) return // Sécurité
+  if (!container || !title) return
 
-  // Récupère le bon objet média en utilisant la "playlist" et le "marque-page"
   const media = currentMediaList[currentMediaIndex]
 
-  // Retire l'ancien média (s'il y en a un)
   const oldMedia =
     container.querySelector("img") || container.querySelector("video")
   if (oldMedia) {
     container.removeChild(oldMedia)
   }
 
-  // Ajoute le nouveau média
   if (media.image) {
     const img = document.createElement("img")
     img.src = `assets/Sample Photos/${folderName}/${media.image}`
@@ -309,10 +357,10 @@ function displayCurrentMedia() {
     video.src = `assets/Sample Photos/${folderName}/${media.video}`
     video.controls = true
     video.className = "lightbox-media"
+    video.setAttribute("aria-label", media.title)
     container.prepend(video)
   }
 
-  // Met à jour le titre
   title.textContent = media.title
 }
 

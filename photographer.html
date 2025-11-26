@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="fr">
   <head>
     <link href="css/style.css" rel="stylesheet" type="text/css" />
     <meta charset="utf-8" />
@@ -12,22 +12,30 @@
   </head>
   <body>
     <header>
-      <a href="index.html">
-        <img src="assets/images/logo.png" class="logo" />
+      <a href="index.html" aria-label="Retour à la page d'accueil">
+        <img
+          src="assets/images/logo.png"
+          class="logo"
+          alt="Fisheye Home page"
+        />
       </a>
     </header>
     <main id="main">
       <div class="photograph-header">
-        <button class="contact-button" onclick="displayModal()">
-          Contactez-moi
-        </button>
+        <button class="contact-button">Contactez-moi</button>
       </div>
     </main>
-    <div id="contact-modal">
+
+    <div id="contact-modal" role="dialog" aria-label="Formulaire de contact">
       <div class="modal">
         <header>
           <div class="header-modal-left"><h2>Contactez-moi</h2></div>
-          <img src="assets/icons/close.svg" onclick="closeModal()" />
+          <button
+            class="modal-close-btn"
+            aria-label="Fermer le formulaire de contact"
+          >
+            <img src="assets/icons/close.svg" alt="" />
+          </button>
         </header>
         <form>
           <div>
@@ -40,7 +48,7 @@
           </div>
           <div>
             <label for="email">Email</label>
-            <input id="email" name="email" type="text" />
+            <input id="email" name="email" type="email" />
           </div>
           <div>
             <label for="message">Votre message</label>
@@ -50,6 +58,7 @@
         </form>
       </div>
     </div>
+
     <script src="scripts/pages/photographer.js"></script>
     <script src="scripts/utils/contactForm.js"></script>
   </body>
