@@ -26,7 +26,51 @@ function getFolderName(name) {
   return name.split(" ")[0]
 }
 
-// --- GESTIONNAIRE CLAVIER LIGHTBOX (FOCUS TRAP) ---
+class ImageMedia {
+  constructor(data, folderName) {
+    this.title = data.title
+    this.image = data.image
+    this.folderName = folderName
+  }
+
+  getDOM() {
+    const img = document.createElement("img")
+    img.src = `assets/Sample Photos/${this.folderName}/${this.image}`
+    img.alt = this.title
+    img.className = "imgMediaCard"
+    return img
+  }
+}
+
+class VideoMedia {
+  constructor(data, folderName) {
+    this.title = data.title
+    this.video = data.video
+    this.folderName = folderName
+  }
+
+  getDOM() {
+    const video = document.createElement("video")
+    video.src = `assets/Sample Photos/${this.folderName}/${this.video}`
+    video.className = "videoMediaCard"
+    video.setAttribute("aria-label", this.title)
+    return video
+  }
+}
+
+class MediaFactory {
+  constructor(data, folderName) {
+    if (data.image) {
+      return new ImageMedia(data, folderName)
+    } else if (data.video) {
+      return new VideoMedia(data, folderName)
+    } else {
+      throw "Format de média inconnu"
+    }
+  }
+}
+
+// --- GESTIONNAIRE CLAVIER LIGHTBOX ---
 function handleLightboxKeydown(e) {
   if (e.key === "Escape") {
     closeLightbox()
@@ -35,7 +79,6 @@ function handleLightboxKeydown(e) {
   } else if (e.key === "ArrowLeft") {
     prevMedia()
   } else if (e.key === "Tab") {
-    // Piège le focus à l'intérieur de la lightbox
     const lightbox = document.getElementById("lightbox-modal")
     const focusableElements = Array.from(
       lightbox.querySelectorAll(
@@ -143,7 +186,7 @@ async function init() {
   const blackHeart = document.createElement("img")
   blackHeart.src = "assets/icons/blackHeart.svg"
   blackHeart.alt = ""
-  blackHeart.setAttribute("aria-hidden", "true") // Icône décorative
+  blackHeart.setAttribute("aria-hidden", "true")
   blackHeart.className = "blackHeartIcon"
   totalLikesBox.appendChild(blackHeart)
 
@@ -167,24 +210,10 @@ async function init() {
       const mediaCard = document.createElement("div")
       mediaCard.className = "media-card"
 
-      let mediaElement
+      const mediaModel = new MediaFactory(item, folderName)
+      const mediaElement = mediaModel.getDOM()
+      mediaCard.appendChild(mediaElement)
 
-      if (item.image) {
-        const img = document.createElement("img")
-        img.className = "imgMediaCard"
-        img.src = `assets/Sample Photos/${folderName}/${item.image}`
-        img.alt = item.title
-        mediaCard.appendChild(img)
-        mediaElement = img
-      }
-      if (item.video) {
-        const video = document.createElement("video")
-        video.className = "videoMediaCard"
-        video.src = `assets/Sample Photos/${folderName}/${item.video}`
-        video.setAttribute("aria-label", item.title)
-        mediaCard.appendChild(video)
-        mediaElement = video
-      }
       const mediaInfos = document.createElement("div")
       mediaInfos.className = "mediaInfos"
       mediaCard.appendChild(mediaInfos)
@@ -204,12 +233,12 @@ async function init() {
       const redHeart = document.createElement("img")
       redHeart.src = "assets/icons/redHeart.svg"
       redHeart.alt = "likes"
-      redHeart.setAttribute("role", "button") // Le coeur agit comme un bouton
-      redHeart.setAttribute("tabindex", "0") // Rendu accessible au clavier
+      redHeart.setAttribute("role", "button")
+      redHeart.setAttribute("tabindex", "0")
       redHeart.className = "redHeartIcon"
       likesMediaCard.appendChild(redHeart)
 
-      // Logique Like (Souris + Clavier)
+      // Logique Like
       let liked = false
       function handleLike() {
         if (!liked) {
@@ -232,7 +261,7 @@ async function init() {
         if (e.key === "Enter") handleLike()
       })
 
-      // Ouverture Lightbox (Souris + Clavier)
+      // Ouverture Lightbox
       mediaElement.setAttribute("tabindex", 0)
       mediaElement.style.cursor = "pointer"
 
@@ -241,7 +270,7 @@ async function init() {
       })
       mediaElement.addEventListener("keydown", (e) => {
         if (e.key === "Enter") {
-          e.preventDefault() // Empêche le comportement par défaut
+          e.preventDefault()
           openLightbox(index)
         }
       })
@@ -346,20 +375,17 @@ function displayCurrentMedia() {
     container.removeChild(oldMedia)
   }
 
-  if (media.image) {
-    const img = document.createElement("img")
-    img.src = `assets/Sample Photos/${folderName}/${media.image}`
-    img.alt = media.title
-    img.className = "lightbox-media"
-    container.prepend(img)
-  } else if (media.video) {
-    const video = document.createElement("video")
-    video.src = `assets/Sample Photos/${folderName}/${media.video}`
-    video.controls = true
-    video.className = "lightbox-media"
-    video.setAttribute("aria-label", media.title)
-    container.prepend(video)
+  const mediaModel = new MediaFactory(media, folderName)
+  const mediaElement = mediaModel.getDOM()
+
+  // (On remplace 'imgMediaCard' ou 'videoMediaCard' par 'lightbox-media')
+  mediaElement.className = "lightbox-media"
+
+  if (mediaElement.tagName === "VIDEO") {
+    mediaElement.setAttribute("controls", "true")
   }
+
+  container.prepend(mediaElement)
 
   title.textContent = media.title
 }
