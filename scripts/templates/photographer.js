@@ -4,10 +4,13 @@ function photographerTemplate(data) {
   const picture = `assets/Sample Photos/Photographers ID Photos/${portrait}`
 
   function getUserCardDOM() {
+    // Création de l'article pour chaque photographe
     const article = document.createElement("article")
 
+    // Lien vers la page du photographe
     const photographer = document.createElement("a")
     photographer.setAttribute("href", `photographer.html?id=${id}`)
+    photographer.setAttribute("aria-label", `Voir la page de ${name}`) // Ajout d'accessibilité utile
     article.appendChild(photographer)
 
     const img = document.createElement("img")
@@ -33,7 +36,9 @@ function photographerTemplate(data) {
     p3.className = "photographer-price"
     p3.textContent = `${price}€/jour`
     photographer.appendChild(p3)
+
     return article
   }
+
   return { name, picture, getUserCardDOM }
 }

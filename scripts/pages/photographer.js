@@ -2,7 +2,7 @@ let currentMediaList = []
 let currentMediaIndex = 0
 let folderName = ""
 
-// --- 1. RÉCUPÉRATION DES DONNÉES ---
+// 1. RÉCUPÉRATION DES DONNÉES
 
 async function getData() {
   const res = await fetch("data/photographers.json")
@@ -25,6 +25,8 @@ async function getMediaByPhotographerId(id) {
 function getFolderName(name) {
   return name.split(" ")[0]
 }
+
+// Modèles et Factory pour la gestion des médias
 
 class ImageMedia {
   constructor(data, folderName) {
@@ -59,7 +61,7 @@ class VideoMedia {
 }
 
 class MediaFactory {
-  constructor(data, folderName) {
+  static build(data, folderName) {
     if (data.image) {
       return new ImageMedia(data, folderName)
     } else if (data.video) {
@@ -70,7 +72,7 @@ class MediaFactory {
   }
 }
 
-// --- GESTIONNAIRE CLAVIER LIGHTBOX ---
+// Gestionnaire clavier pour la Lightbox (Focus Trap)
 function handleLightboxKeydown(e) {
   if (e.key === "Escape") {
     closeLightbox()
@@ -102,7 +104,7 @@ function handleLightboxKeydown(e) {
   }
 }
 
-// --- 2. FONCTION PRINCIPALE ---
+// 2. FONCTION PRINCIPALE
 
 async function init() {
   const params = new URLSearchParams(window.location.search)
@@ -115,7 +117,7 @@ async function init() {
 
   const main = document.querySelector("main")
 
-  // --- Header ---
+  // Construction du Header
   const picture = `assets/Sample Photos/Photographers ID Photos/${photographer.portrait}`
   const header = document.querySelector(".photograph-header")
 
@@ -149,7 +151,7 @@ async function init() {
   photographerNameElement.classList.add("photographer-name-modal")
   headerModalLeft.appendChild(photographerNameElement)
 
-  // --- Menu de Tri ---
+  // Menu de Tri
   const filter = document.createElement("div")
   filter.className = "filter"
 
@@ -169,7 +171,7 @@ async function init() {
   filter.appendChild(select)
   main.appendChild(filter)
 
-  // --- Encart Likes/Prix ---
+  // Encart Likes/Prix
   const boxInfos = document.createElement("div")
   boxInfos.className = "boxInfos"
 
@@ -197,7 +199,7 @@ async function init() {
 
   main.appendChild(boxInfos)
 
-  // --- Galerie ---
+  // Galerie
   const gallery = document.createElement("div")
   gallery.className = "media-gallery"
   main.appendChild(gallery)
@@ -210,7 +212,8 @@ async function init() {
       const mediaCard = document.createElement("div")
       mediaCard.className = "media-card"
 
-      const mediaModel = new MediaFactory(item, folderName)
+      // Utilisation de la Factory pour créer le média
+      const mediaModel = MediaFactory.build(item, folderName)
       const mediaElement = mediaModel.getDOM()
       mediaCard.appendChild(mediaElement)
 
@@ -300,7 +303,7 @@ async function init() {
 
 init()
 
-// --- 3. FONCTIONS DE LA LIGHTBOX ---
+// 3. FONCTIONS DE LA LIGHTBOX
 
 function openLightbox(index) {
   if (document.getElementById("lightbox-modal")) return
@@ -375,10 +378,10 @@ function displayCurrentMedia() {
     container.removeChild(oldMedia)
   }
 
-  const mediaModel = new MediaFactory(media, folderName)
+  // Utilisation de la Factory pour la Lightbox
+  const mediaModel = MediaFactory.build(media, folderName)
   const mediaElement = mediaModel.getDOM()
 
-  // (On remplace 'imgMediaCard' ou 'videoMediaCard' par 'lightbox-media')
   mediaElement.className = "lightbox-media"
 
   if (mediaElement.tagName === "VIDEO") {
