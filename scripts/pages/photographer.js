@@ -32,6 +32,7 @@ class ImageMedia {
   constructor(data, folderName) {
     this.title = data.title
     this.image = data.image
+    this.likes = data.likes
     this.folderName = folderName
   }
 
@@ -48,6 +49,7 @@ class VideoMedia {
   constructor(data, folderName) {
     this.title = data.title
     this.video = data.video
+    this.likes = data.likes
     this.folderName = folderName
   }
 
@@ -72,55 +74,9 @@ class MediaFactory {
   }
 }
 
-// Gestionnaire clavier pour la Lightbox (Focus Trap)
-function handleLightboxKeydown(e) {
-  if (e.key === "Escape") {
-    closeLightbox()
-  } else if (e.key === "ArrowRight") {
-    nextMedia()
-  } else if (e.key === "ArrowLeft") {
-    prevMedia()
-  } else if (e.key === "Tab") {
-    // Piège de focus
-    const lightbox = document.getElementById("lightbox-modal")
-    const focusableElements = Array.from(
-      lightbox.querySelectorAll(
-        'button, [href], input, textarea, video[controls], [tabindex]:not([tabindex="-1"])'
-      )
-    )
-    const firstFocusableElement = focusableElements[0] // Bouton fermer
-    const lastFocusableElement = focusableElements[focusableElements.length - 1] // Bouton précédent
+// 3. FONCTIONS D'AFFICHAGE DU DOM
 
-    if (e.shiftKey) {
-      // Boucle vers le dernier
-      if (document.activeElement === firstFocusableElement) {
-        e.preventDefault()
-        lastFocusableElement.focus()
-      }
-    } else {
-      // Boucle vers le premier
-      if (document.activeElement === lastFocusableElement) {
-        e.preventDefault()
-        firstFocusableElement.focus()
-      }
-    }
-  }
-}
-
-// 2. FONCTION PRINCIPALE
-
-async function init() {
-  const params = new URLSearchParams(window.location.search)
-  const id = params.get("id")
-
-  const photographer = await getPhotographerById(id)
-  let media = await getMediaByPhotographerId(id)
-
-  folderName = getFolderName(photographer.name)
-
-  const main = document.querySelector("main")
-
-  // Construction du Header
+function displayHeader(photographer) {
   const picture = `assets/Sample Photos/Photographers ID Photos/${photographer.portrait}`
   const header = document.querySelector(".photograph-header")
 
@@ -148,13 +104,16 @@ async function init() {
   portrait.className = "photographerPortrait"
   header.appendChild(portrait)
 
+  // Nom dans la modale de contact
   const headerModalLeft = document.querySelector(".header-modal-left")
   const photographerNameElement = document.createElement("p")
   photographerNameElement.textContent = photographer.name
   photographerNameElement.classList.add("photographer-name-modal")
   headerModalLeft.appendChild(photographerNameElement)
+}
 
-  // Menu de Tri
+function displaySortMenu() {
+  const main = document.querySelector("main")
   const filter = document.createElement("div")
   filter.className = "filter"
 
@@ -174,7 +133,14 @@ async function init() {
   filter.appendChild(select)
   main.appendChild(filter)
 
-  // Encart Likes/Prix
+  // Écouteur pour le tri
+  select.addEventListener("change", (e) => {
+    sortAndRender(e.target.value)
+  })
+}
+
+function displayStats(media, price) {
+  const main = document.querySelector("main")
   const boxInfos = document.createElement("div")
   boxInfos.className = "boxInfos"
 
@@ -184,6 +150,7 @@ async function init() {
 
   const totalLikes = document.createElement("p")
   totalLikes.className = "totalLikes"
+  // Calcul initial du total
   let totalLikesCount = media.reduce((acc, m) => acc + (m.likes || 0), 0)
   totalLikes.textContent = totalLikesCount.toLocaleString("fr-FR")
   totalLikesBox.appendChild(totalLikes)
@@ -197,116 +164,153 @@ async function init() {
 
   const dailyPrice = document.createElement("p")
   dailyPrice.className = "dailyPrice"
-  dailyPrice.textContent = `${photographer.price}€ / jour`
+  dailyPrice.textContent = `${price}€ / jour`
   boxInfos.appendChild(dailyPrice)
 
   main.appendChild(boxInfos)
-
-  // Galerie
-  const gallery = document.createElement("div")
-  gallery.className = "media-gallery"
-  main.appendChild(gallery)
-
-  function renderGallery(mediaArray) {
-    gallery.innerHTML = ""
-    currentMediaList = mediaArray
-
-    mediaArray.forEach((item, index) => {
-      const mediaCard = document.createElement("div")
-      mediaCard.className = "media-card"
-
-      // Utilisation de la Factory pour créer le média
-      const mediaModel = MediaFactory.build(item, folderName)
-      const mediaElement = mediaModel.getDOM()
-      mediaCard.appendChild(mediaElement)
-
-      const mediaInfos = document.createElement("div")
-      mediaInfos.className = "mediaInfos"
-      mediaCard.appendChild(mediaInfos)
-
-      const title = document.createElement("p")
-      title.textContent = item.title
-      mediaInfos.appendChild(title)
-
-      const likesMediaCard = document.createElement("div")
-      likesMediaCard.className = "likesMediaCard"
-      mediaInfos.appendChild(likesMediaCard)
-
-      const mediaLikes = document.createElement("p")
-      mediaLikes.textContent = item.likes
-      likesMediaCard.appendChild(mediaLikes)
-
-      const redHeart = document.createElement("img")
-      redHeart.src = "assets/icons/redHeart.svg"
-      redHeart.alt = "likes"
-      redHeart.setAttribute("role", "button")
-      redHeart.setAttribute("tabindex", "0")
-      redHeart.className = "redHeartIcon"
-      likesMediaCard.appendChild(redHeart)
-
-      // Logique Like
-      let liked = false
-      function handleLike() {
-        if (!liked) {
-          item.likes++
-          totalLikesCount++
-          liked = true
-        } else {
-          item.likes--
-          totalLikesCount--
-          liked = false
-        }
-        mediaLikes.textContent = item.likes
-        totalLikes.textContent = totalLikesCount.toLocaleString("fr-FR")
-        redHeart.classList.add("animateHeart")
-        setTimeout(() => redHeart.classList.remove("animateHeart"), 200)
-      }
-
-      redHeart.addEventListener("click", handleLike)
-      redHeart.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") handleLike()
-      })
-
-      // Ouverture Lightbox
-      mediaElement.setAttribute("tabindex", 0)
-      mediaElement.style.cursor = "pointer"
-
-      mediaElement.addEventListener("click", () => {
-        openLightbox(index)
-      })
-      mediaElement.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") {
-          e.preventDefault()
-          openLightbox(index)
-        }
-      })
-
-      gallery.appendChild(mediaCard)
-    })
-  }
-
-  function sortAndRender(criteria) {
-    const copy = media.slice()
-    if (criteria === "popularity") {
-      copy.sort((a, b) => (b.likes || 0) - (a.likes || 0))
-    } else if (criteria === "date") {
-      copy.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0))
-    } else if (criteria === "title") {
-      copy.sort((a, b) => (a.title || "").localeCompare(b.title || ""))
-    }
-    renderGallery(copy)
-  }
-
-  select.addEventListener("change", (e) => {
-    sortAndRender(e.target.value)
-  })
-
-  sortAndRender("date")
 }
 
-init()
+// 4. LOGIQUE DE LA GALERIE
 
-// 3. FONCTIONS DE LA LIGHTBOX
+function renderGallery(mediaArray) {
+  const gallery =
+    document.querySelector(".media-gallery") || document.createElement("div")
+  gallery.className = "media-gallery"
+  // Si la galerie n'est pas encore dans le DOM, on l'ajoute
+  if (!document.querySelector(".media-gallery")) {
+    document.querySelector("main").appendChild(gallery)
+  }
+
+  gallery.innerHTML = ""
+  currentMediaList = mediaArray
+
+  mediaArray.forEach((item, index) => {
+    const mediaCard = document.createElement("div")
+    mediaCard.className = "media-card"
+
+    // Utilisation de la Factory
+    const mediaModel = MediaFactory.build(item, folderName)
+    const mediaElement = mediaModel.getDOM()
+    mediaCard.appendChild(mediaElement)
+
+    const mediaInfos = document.createElement("div")
+    mediaInfos.className = "mediaInfos"
+    mediaCard.appendChild(mediaInfos)
+
+    const title = document.createElement("p")
+    title.textContent = item.title
+    mediaInfos.appendChild(title)
+
+    const likesMediaCard = document.createElement("div")
+    likesMediaCard.className = "likesMediaCard"
+    mediaInfos.appendChild(likesMediaCard)
+
+    const mediaLikes = document.createElement("p")
+    mediaLikes.textContent = item.likes
+    likesMediaCard.appendChild(mediaLikes)
+
+    const redHeart = document.createElement("img")
+    redHeart.src = "assets/icons/redHeart.svg"
+    redHeart.alt = "likes"
+    redHeart.setAttribute("role", "button")
+    redHeart.setAttribute("tabindex", "0")
+    redHeart.className = "redHeartIcon"
+    likesMediaCard.appendChild(redHeart)
+
+    // Logique Like
+    let liked = false
+    function handleLike() {
+      // Mise à jour compteur carte
+      if (!liked) {
+        item.likes++
+        liked = true
+      } else {
+        item.likes--
+        liked = false
+      }
+      mediaLikes.textContent = item.likes
+
+      // Mise à jour compteur total
+      const totalLikesElement = document.querySelector(".totalLikes")
+      let currentTotal = parseInt(
+        totalLikesElement.textContent.replace(/\s/g, "")
+      )
+      if (liked) currentTotal++
+      else currentTotal--
+      totalLikesElement.textContent = currentTotal.toLocaleString("fr-FR")
+
+      // Animation
+      redHeart.classList.add("animateHeart")
+      setTimeout(() => redHeart.classList.remove("animateHeart"), 200)
+    }
+
+    redHeart.addEventListener("click", handleLike)
+    redHeart.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") handleLike()
+    })
+
+    // Ouverture Lightbox
+    mediaElement.setAttribute("tabindex", 0)
+    mediaElement.style.cursor = "pointer"
+
+    mediaElement.addEventListener("click", () => {
+      openLightbox(index)
+    })
+    mediaElement.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault()
+        openLightbox(index)
+      }
+    })
+
+    gallery.appendChild(mediaCard)
+  })
+}
+
+function sortAndRender(criteria) {
+  const copy = currentMediaList.slice()
+  if (criteria === "popularity") {
+    copy.sort((a, b) => (b.likes || 0) - (a.likes || 0))
+  } else if (criteria === "date") {
+    copy.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0))
+  } else if (criteria === "title") {
+    copy.sort((a, b) => (a.title || "").localeCompare(b.title || ""))
+  }
+  renderGallery(copy)
+}
+
+// 5. GESTION DE LA LIGHTBOX
+
+function handleLightboxKeydown(e) {
+  if (e.key === "Escape") {
+    closeLightbox()
+  } else if (e.key === "ArrowRight") {
+    nextMedia()
+  } else if (e.key === "ArrowLeft") {
+    prevMedia()
+  } else if (e.key === "Tab") {
+    const lightbox = document.getElementById("lightbox-modal")
+    const focusableElements = Array.from(
+      lightbox.querySelectorAll(
+        'button, [href], input, textarea, video[controls], [tabindex]:not([tabindex="-1"])'
+      )
+    )
+    const firstFocusableElement = focusableElements[0]
+    const lastFocusableElement = focusableElements[focusableElements.length - 1]
+
+    if (e.shiftKey) {
+      if (document.activeElement === firstFocusableElement) {
+        e.preventDefault()
+        lastFocusableElement.focus()
+      }
+    } else {
+      if (document.activeElement === lastFocusableElement) {
+        e.preventDefault()
+        firstFocusableElement.focus()
+      }
+    }
+  }
+}
 
 function openLightbox(index) {
   if (document.getElementById("lightbox-modal")) return
@@ -381,7 +385,6 @@ function displayCurrentMedia() {
     container.removeChild(oldMedia)
   }
 
-  // Utilisation de la Factory pour la Lightbox
   const mediaModel = MediaFactory.build(media, folderName)
   const mediaElement = mediaModel.getDOM()
 
@@ -411,3 +414,26 @@ function prevMedia() {
   }
   displayCurrentMedia()
 }
+
+// 6. FONCTION PRINCIPALE
+
+async function init() {
+  // Récupération des données
+  const params = new URLSearchParams(window.location.search)
+  const id = params.get("id")
+  const photographer = await getPhotographerById(id)
+  const media = await getMediaByPhotographerId(id)
+
+  folderName = getFolderName(photographer.name)
+  currentMediaList = media // Initialise la liste globale
+
+  // Construction de la page
+  displayHeader(photographer)
+  displaySortMenu()
+  displayStats(media, photographer.price)
+
+  // Premier affichage de la galerie (triée par date)
+  sortAndRender("date")
+}
+
+init()
