@@ -81,21 +81,24 @@ function handleLightboxKeydown(e) {
   } else if (e.key === "ArrowLeft") {
     prevMedia()
   } else if (e.key === "Tab") {
+    // Piège de focus
     const lightbox = document.getElementById("lightbox-modal")
     const focusableElements = Array.from(
       lightbox.querySelectorAll(
         'button, [href], input, textarea, video[controls], [tabindex]:not([tabindex="-1"])'
       )
     )
-    const firstFocusableElement = focusableElements[0]
-    const lastFocusableElement = focusableElements[focusableElements.length - 1]
+    const firstFocusableElement = focusableElements[0] // Bouton fermer
+    const lastFocusableElement = focusableElements[focusableElements.length - 1] // Bouton précédent
 
     if (e.shiftKey) {
+      // Boucle vers le dernier
       if (document.activeElement === firstFocusableElement) {
         e.preventDefault()
         lastFocusableElement.focus()
       }
     } else {
+      // Boucle vers le premier
       if (document.activeElement === lastFocusableElement) {
         e.preventDefault()
         firstFocusableElement.focus()

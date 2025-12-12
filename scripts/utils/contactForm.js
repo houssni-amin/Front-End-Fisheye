@@ -13,16 +13,16 @@ function handleContactKeydown(e) {
     closeModal()
   }
 
-  // Piège de focus avec "Tab" (empêche de sortir de la modale)
+  // Piège de focus
   if (e.key === "Tab") {
     if (e.shiftKey) {
-      // Shift + Tab : Si on est sur le premier élément, on boucle vers le dernier
+      // Boucle vers le dernier
       if (document.activeElement === firstFocusableElement) {
         e.preventDefault()
         lastFocusableElement.focus()
       }
     } else {
-      // Tab simple : Si on est sur le dernier élément, on boucle vers le premier
+      // Boucle vers le premier
       if (document.activeElement === lastFocusableElement) {
         e.preventDefault()
         firstFocusableElement.focus()
@@ -41,9 +41,8 @@ function displayModal() {
     )
   )
 
-  // Définit le premier et le dernier élément pour le piège
-  firstFocusableElement = focusableElements[0] // Bouton Fermer
-  lastFocusableElement = focusableElements[focusableElements.length - 1] // Bouton Envoyer
+  firstFocusableElement = focusableElements[0] // Bouton fermer
+  lastFocusableElement = focusableElements[focusableElements.length - 1] // Bouton envoyer
 
   // Place le focus sur le premier élément
   firstFocusableElement.focus()
